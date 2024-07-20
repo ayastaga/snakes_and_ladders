@@ -1,0 +1,110 @@
+IMPORT time
+IMPORT random
+IMPORT sys
+
+FUNCTION get_dice_value():
+    DELAY action by SLEEP_BETWEEN_ACTIONS seconds
+    SET dice_value to RANDOM INT from 1 to DICE_FACE
+    PRINT dice_value
+    RETURN dice_value
+ENDFUNCTION
+
+FUNCTION welcome_msg():
+    SET msg in order to welcome user & explain rules
+    DISPLAY msg to user
+ENDFUNCTION
+
+FUNCTION get_player_names():
+    SET player1_name to NONE
+    WHILE player1_name does not exist:
+        GET player1_name and STRIP any whitespace
+    ENDWHILE
+
+    SET player2_name to NONE
+    WHILE player2_name does not exist:
+        GET player2_name and STRIP any whitespace
+    ENDWHILE
+
+    DISPLAY who the match is played between (all usernames)
+
+    RETURN player1_name and player2_name
+ENDFUNCTION
+
+FUNCTION got_snake_bite(old_value, current_value, player_name):
+    DISPLAY snake_bite size with visual
+    DISPLAY the player_name who got bit, and their position from old_value to current_value
+ENDFUNCTION
+
+FUNCTION got_ladder_jump(old_value, current_value, player_name):
+    DISPLAY ladder_jump size with visual
+    DISPLAY the player_name who climbed, and their position from old_value to current_value 
+ENDFUNCTION
+
+FUNCTION snake_ladder(player_name, current_value, dice_value):
+    SET old_value to current_value
+    SET current_value to the sum of current_value and dice_value
+
+    IF current_value is greater than MAX_VAL THEN:
+        DISPLAY the amount needed to win the game 
+        RETURN old_value
+    ENDIF
+
+    IF current_value is in snakes dict THEN:
+        SET final_value to the VALUE of snakes current_value is the KEY
+        CALL got_snake_bite with current_value, final_value and player_name
+    ELIF current_vlaue is in ladders dict THEN:
+        SET final_value to the VALUE of ladders when current_value is the KEY
+        CALL got_ladder_jump with current_value, final_value and player_name
+    ELSE:
+        SET final_value to current_value
+    ENDIF
+
+    RETURN final_value
+ENDFUNCTION
+
+FUNCTION check_win(player_name, position):
+    IF MAX_VAL is equal to position THEN:
+        DISPLAY winning message
+        EXIT SYSTEM
+    ENDIF
+ENDFUNCTION
+
+FUNCTION start():
+    CALL welcome_msg()
+    CALL get_player_names and SET them to player1_name and player2_name
+    
+    INIT player1_current_position to equal 0
+    INIT player2_current_position to equal 0
+
+    WHILE TRUE:
+        GET input to acknowledge the initiation of 1st user's turn and randomize message through RANDOM CHOICE of player_turn_text
+        DISPLAY "Rolling dice..." to simulate rolling a die
+        CALL get_dice_value()
+        DISPLAY "player1_name moving..." to let user about their moves being calculated
+        CALL snake_ladder with player1_name, player1_current_position and dice_value and SET it to player1_current_position 
+        CALL check_win with player1_name and player1_current_position
+
+        GET input to acknowledge the initiation of 2nd user's turn and randomize message through RANDOM CHOICE of player_turn_text
+        DISPLAY "Rolling dice..." to simulate rolling a die
+        CALL get_dice_value()
+        DISPLAY "player2_name moving..." to let user know about their moves being calculated
+        CALL snake_ladder with player2_name, player2_current_position and dice_value and SET it to player2_current_position
+        CALL check_win with player2_name and player2_current_position
+    ENDWHILE
+ENDFUNCTION
+
+IF the script is run directly THEN:
+    INIT SLEEP_BETWEEN_ACTIONS to 1
+    INIT MAX_VAL to 100
+    INIT DICE_FACE to 6
+
+    INIT player_turn_text to be a LIST of different messages to display during turns
+
+    INIT snakes to be a DICT that maps the locations of the mouth (KEY) to tail (VALUE) of a snake
+    INIT snake_bite to be a LIST of different messages to display when bitten by a snake
+
+    INIT ladders to be a DICT that maps the locations of the base (KEY) to the top (MOUTH) of a ladder
+    INIT ladder_jump to be a LIST of different messages to display when climbing a ladder
+    
+    CALL start
+ENDIF

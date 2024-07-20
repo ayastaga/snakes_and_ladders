@@ -1,0 +1,178 @@
+IMPORT time
+IMPORT random
+IMPORT sys
+
+FUNCTION welcome_msg():
+    SET msg in order to welcome user & explain rules
+    DISPLAY msg to user
+ENDFUNCTION
+
+FUNCTION get_player_count():
+    SET player_count to 6
+    WHILE player_count is lower than 2 or greater than 4:
+        GET input of number of players AS INT and SET it to player_count
+    ENDWHILE
+    RETURN player_count
+ENDFUNCTION
+
+FUNCTION get_players_list(player_count):
+    INIT players_list to empty array
+    DISPLAY request to enter names of each player
+
+    FOR i from 0 to player_count:
+        SET player to NONE
+        WHILE player does not exist:
+            GET the name of each player and SET it to player
+        ENDWHILE
+        APPEND player to player_list
+    ENDFOR
+
+    RETURN player_list
+ENDFUNCTION
+
+FUNCTION generate_ladders_position():
+    INIT ladders_list to empty dict
+    INIT used_ladders_list to empty array
+
+    WHILE LENGTH of ladders_list is less than 15:
+        SET ladder_start to a RANDOM INT between 5 and 85
+        SET ladder_end to a RANDOM INT between 5 and 85
+
+        IF ladder_end is greater than ladder_start and both not in used_ladders_list THEN:
+            SET ladder_start as KEY and ladder_end as VALUE of ladders_list
+            APPEND ladder_start to used_ladders_list
+            APPEND ladder_end to used_ladders_list
+        ENDIF
+
+        RETURN ladders_list
+ENDFUNCTION
+
+FUNCTION generate_snakes_position(ladders_list):
+    INIT snakes_list to empty dict
+    SET ladder_start_positions to KEYS of ladders_list
+    SET ladder_end_positions to VALUES of ladders_list
+    INIT used_snakes_list to empty array
+
+    WHILE LENGTH of snakes_list is less than 15:
+        SET snake_mouth to a RANDOM INT between 5 and 85
+        SET snake_tail to a RANDOM INT between 5 and 85
+
+        IF snake_mouth is greater than snake_tail, both are not in used_snakes_list, 
+        and snake_mouth is not in ladder_end_positions THEN:
+            SET snake_mouth as KEY and snake_tail as VALUE of ladders_list
+            APPEND snake_mouth to used_snakes_list
+            APPEND snake_tail to used_snakes_list
+        ENDIF
+
+        RETURN snakes_list
+ENDFUNCTION
+
+FUNCTION roll_dice(current_position, player_name):
+    SET dice_value to a RANDOM INT between 1 and 6
+    SET new_position to current_position
+    DISPLAY "Rolling dice..." to signal that the die has been rolled 
+    DISPLAY "{player_name} has rolled a {dice_value} to inform the user of the value rolled
+    
+    IF the sum of the current_position and dice_value is greater than 100 THEN:
+        DISPLAY a message letting the user know that they need to get to 100 exactly
+    ELSE:
+        SET new_position to the sum of current_position and dice_value
+        DISPLAY a message letting the user know that they moved from current_position to new_position
+    ENDIF
+
+    RETURN new_position
+ENDFUNCTION
+
+FUNCTION check_for_ladder(current_position, ladder_list, player_name):
+    IF current_position is in list of KEYS of ladder_list THEN:
+        SET new_position to current_position plus 15
+        DISPLAY a message letting the user know that they climbed a ladder and moved from current_position to new_position
+    ELSE:
+        SET new_position to be the same position (current_position)
+    ENDIF
+
+    RETURN new_position
+ENDFUNCTION
+
+FUNCTION check_for_snake(current_position, snake_list, player_name):
+    IF current_position is in list of KEYS of snake_list THEN:
+        SET new_position to current_position minus 10
+        DISPLAY a message letting the user know that they got bit and moved from current_position to new_position
+    ELSE:
+        SET new_position to be the same position (current_position)
+    ENDIF
+
+    RETURN new_position
+ENDFUNCTION
+
+FUNCTION shortest_pathfinder(ladders_list, snakes_list):
+    MERGE ladders_list and snakes_list and SET it to leaps
+    INIT squares as a dict with the value of 0 
+    INIT counter to 0
+
+    WHILE 100 not in squares:
+        INCREMENT counter by 1
+        SET old_squares to squares
+        (RE)SET squares to an empty set
+
+        FOR squares in old_squares:
+            FOR dice from 0 to 6:
+                new_square = square + dice + 1
+                # shortened this in the actual code
+                IF new_square is a key in the leaps dictionary THEN:
+                    ADD the VALUE linked to the new_square in leaps to the squares set
+                ELSE:
+                    ADD new_square to the squares_set
+                ENDIF
+            ENDFOR
+        ENDFOR
+
+    RETURN counter
+ENDFUNCTION
+
+IF the script is run directly then:
+    SET play_again to TRUE
+
+    WHILE play_again is TRUE:
+        # SLEEP TIME STUFF
+
+        CALL get_player_count() and SET it to player_count
+        SET players_position to an empty array with length of player_count filled with 0s
+        CALL generate_ladders_position() and SET it to ladders_list
+        CALL generate_snakes_position with ladders_list and SET it to snakes_list
+
+        SET move_counter to 0
+
+        WHILE all postiions in players_positions are less than 99:
+            INCREMENT move_counter by 1
+
+            FOR i from 0 to player_count:
+                SET current_position to players_position at i
+
+                CALL roll_dice with current_position and players_name at i and SET it to new_position
+                CALL check_for_ladder with new_position, ladders_list, and player_name at i and (RE)SET it to new_position
+                CALL check_for_snake with new_position, snakes_lsit and players_name at i and (RE)SET it to new_position
+                
+                SET players_position at i to new_position
+
+                IF new_position is greater than 99 THEN:
+                    DISPLAY congratulations to the user for winning the game
+                    BREAK out of loop
+                ENDIF
+            ENDFOR
+
+        IF new_position is greater than 99 THEN:
+            BREAK out of loop
+        ENDIF
+
+    CALL shortest_pathfinder with ladders_list and snakes_list and SET it to shortest_path
+    DISPLAY move_counter and compare against shortest_path possible
+
+    SET play_again_prompt to "None" 
+    WHILE play_again_prompt CAPITALIZED is not "Y" or "N":
+        GET play_again_prompt as "Y" or "N"
+    ENDWHILE
+
+    IF player_again_prompt CAPITALIZED is "N" THEN:
+        SET play_again to FALSE
+    ENDIF
